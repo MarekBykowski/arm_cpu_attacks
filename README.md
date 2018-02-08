@@ -1,5 +1,6 @@
 PoC code implementing variant 3a of the Meltdown attack for AArch64. This allows reading all (potentially excluding registers whose read has side effects - not verified) system registers from user mode, including those which should only be accessible from the EL1 (kernel), EL2 (hypervisor) and EL3 (secure monitor) modes.
 
+
 The first 5 LDR instructions are setup so that the last in the sequence raises a NULL pointer dereference exception when it retires. The zrbuf  buffer (x1) is setup for the purpose of raising the exception.
 The next 5 instructions are those which are run speculatively by the CPU. These instructions are not retired because an exception 'happens before' in the program order. Nevertheless, their speculative execution loads a cacheline of one of the two pages of the probe buffer (x0) into the DCache, depending on the speculatively read bit (x2) of a privileged register. The custom exception hanlder (get_value) checks which of the two pages are represented in the DCache, and accordingly determines the bit to be 0 or 1. Bit by bit, all 64 bits of the privileged register are extracted.
 
