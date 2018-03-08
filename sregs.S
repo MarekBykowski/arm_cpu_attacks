@@ -19,8 +19,21 @@ spec_read:
 	/* gets replaced in the c file with the mrs x3, spec_reg
 	   This is 1st speculation
 	 */
-
 	nop
+
+#ifdef APPLY_COUNTERPART
+	/* set manually condition code flag GE in PSTATE.NZCV
+	   so that ge condition below is met.
+	 */	
+	mov x9, #0x90000000
+	msr nzcv, x9
+	csel x3, xzr, x3, ge 
+
+    /* This is the new barrier 
+	   CSDB: 1101_0101_0000_0011_0010_0010_1001_1111
+	 */
+	hint #0x14
+#endif
 
 	/* shift bit position 0 */
 	lsr x3, x3, x2
@@ -57,6 +70,12 @@ mem_read:
 	ldr x1, [x1]
 	ldr x1, [x1]
 	ldr x4, [x3]
+#ifdef APPLY_COUNTERPART
+	mov x9, #0x90000000
+	msr nzcv, x9
+	csel x4, xzr, x4, ge 
+	hint #0x14
+#endif
 	lsr x4, x4, x2
 	and x4, x4, #1
 	add x0, x0, x4, lsl #12

