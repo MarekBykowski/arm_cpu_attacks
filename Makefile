@@ -1,10 +1,10 @@
-GCC=aarch64-poky-linux-gcc   
-AR=aarch64-poky-linux-gcc-ar 
+GCC=aarch64-axxia-linux-gcc
+AR=aarch64-axxia-linux-gcc-ar
 
 CFLAGS=-ggdb -std=gnu99 -O2 -pthread -Wall --save-temps
 #if applying mitigiation add MITIGATE to end of COMPILE
 MITIGATE=-DAPPLY_COUNTERPART
-COMPILE=$(GCC) --sysroot=/tools/AGRreleases/yocto/tools_jethro/armv8/axxia-image-large/sysroots/aarch64-poky-linux $(CFLAGS)  
+COMPILE=$(GCC) --sysroot=/tools/AGRreleases/yocto/morty/2018_01_26/axxia-arm64-x9/tools/sysroots/aarch64-axxia-linux $(CFLAGS) $(MITIGATE) 
 
 all: dump_sys_regs
 

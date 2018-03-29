@@ -116,12 +116,12 @@ void get_value(int i, siginfo_t *info, void *ctx) {
 void get_value(int i, siginfo_t *info, void *ctx) {
 	read_bit = 0;
 
-	/* time taking loading page1st */
+	/* time taking loading page#2 */
 	uint64_t ns = timed_read(&probe[probe_stride]);
 	if (ns < miss_min && ns > 0) {
 		read_bit = 1;
 	} else {
-		/* time taking loading page2nd */
+		/* time taking loading page#1 */
 		uint64_t ns2 = timed_read(&probe[0]);
 		if (ns2 >= miss_min || ns2 == 0) {
 			read_bit = -1;
